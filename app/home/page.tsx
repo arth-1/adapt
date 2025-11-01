@@ -4,7 +4,7 @@ import React from "react";
 import AdaptDashboard from "@/components/AdaptDashboard";
 import { useSupabaseUser } from "@/lib/useSupabaseUser";
 
-export default function Home() {
+export default function HomePage() {
   const { user } = useSupabaseUser();
   return (
     <AdaptDashboard
