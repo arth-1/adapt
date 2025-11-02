@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
   const isProtected = pathname.startsWith('/home') || pathname.startsWith('/api/credit') || pathname.startsWith('/api/advisor');
   if (!isProtected) return NextResponse.next();
 
-  // Check for dummy session bypass
+  // Check for dummy session bypass (cookie already present)
   const dummySession = req.cookies.get('sb-dummy-session');
   if (dummySession) {
     return NextResponse.next();
@@ -39,6 +39,19 @@ export async function middleware(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
+    // If dummy auth is enabled, synthesize a front-end readable session cookie and allow
+    if (process.env.DUMMY_AUTH_ENABLED === 'true') {
+      const email = process.env.DUMMY_AUTH_EMAIL || 'tech4earthh@adapt.demo';
+      const id = process.env.DUMMY_AUTH_USER_ID || 'demo-user-0001';
+      const demoCookie = JSON.stringify({ user: { id, email } });
+      res.cookies.set('sb-dummy-session', encodeURIComponent(demoCookie), {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+      return res;
+    }
+
+    // Otherwise enforce auth
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

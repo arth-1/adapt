@@ -20,15 +20,29 @@ export function getAccessToken(req: NextRequest): string | null {
 // Verifies the token with Supabase and returns the authenticated user
 export async function getAuthUser(req: NextRequest): Promise<AuthUser | null> {
   const token = getAccessToken(req);
-  if (!token || !supabaseAdmin) return null;
-  try {
-    const { data, error } = await supabaseAdmin.auth.getUser(token);
-    if (error || !data?.user) return null;
-  const { user } = data;
-  return { id: user.id, email: user.email ?? undefined };
-  } catch {
-    return null;
+
+  // If we have a valid Supabase token, verify and return the real user
+  if (token && supabaseAdmin) {
+    try {
+      const { data, error } = await supabaseAdmin.auth.getUser(token);
+      if (!error && data?.user) {
+        const { user } = data;
+        return { id: user.id, email: user.email ?? undefined };
+      }
+    } catch {
+      // fall through to dummy auth if enabled
+    }
   }
+
+  // Dummy auth bypass (for demos/production preview) when enabled
+  if (process.env.DUMMY_AUTH_ENABLED === 'true') {
+    const email = process.env.DUMMY_AUTH_EMAIL || 'tech4earthh@adapt.demo';
+    // Stable demo id so data remains consistent across requests
+    const id = process.env.DUMMY_AUTH_USER_ID || 'demo-user-0001';
+    return { id, email };
+  }
+
+  return null;
 }
 
 
