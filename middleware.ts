@@ -39,19 +39,18 @@ export async function middleware(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    // If dummy auth is enabled, synthesize a front-end readable session cookie and allow
-    if (process.env.DUMMY_AUTH_ENABLED === 'true') {
-      const email = process.env.DUMMY_AUTH_EMAIL || 'tech4earthh@adapt.demo';
-      const id = process.env.DUMMY_AUTH_USER_ID || 'demo-user-0001';
-      const demoCookie = JSON.stringify({ user: { id, email } });
-      res.cookies.set('sb-dummy-session', encodeURIComponent(demoCookie), {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
-      return res;
-    }
+    // Always allow with a demo cookie in this deployment (bypass auth)
+    const email = process.env.DUMMY_AUTH_EMAIL || 'tech4earthh@adapt.demo';
+    const id = process.env.DUMMY_AUTH_USER_ID || 'demo-user-0001';
+    const demoCookie = JSON.stringify({ user: { id, email } });
+    res.cookies.set('sb-dummy-session', encodeURIComponent(demoCookie), {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+    return res;
 
-    // Otherwise enforce auth
+    // If you want to enforce auth instead, comment out the above and use the redirect/401 below.
+    /*
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -59,6 +58,7 @@ export async function middleware(req: NextRequest) {
     url.pathname = '/sign-in';
     url.searchParams.set('redirectedFrom', pathname);
     return NextResponse.redirect(url);
+    */
   }
   
   return res;

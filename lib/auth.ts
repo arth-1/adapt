@@ -19,6 +19,17 @@ export function getAccessToken(req: NextRequest): string | null {
 
 // Verifies the token with Supabase and returns the authenticated user
 export async function getAuthUser(req: NextRequest): Promise<AuthUser | null> {
+  // 1) Dummy cookie (middleware or client bypass)
+  const dummy = req.cookies.get('sb-dummy-session');
+  if (dummy) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(dummy.value)) as { user?: { id: string; email?: string } };
+      if (parsed?.user?.id) return { id: parsed.user.id, email: parsed.user.email };
+    } catch {
+      // ignore
+    }
+  }
+
   const token = getAccessToken(req);
 
   // If we have a valid Supabase token, verify and return the real user
@@ -34,7 +45,7 @@ export async function getAuthUser(req: NextRequest): Promise<AuthUser | null> {
     }
   }
 
-  // Dummy auth bypass (for demos/production preview) when enabled
+  // 3) Dummy auth bypass (for demos/production preview) when enabled
   if (process.env.DUMMY_AUTH_ENABLED === 'true') {
     const email = process.env.DUMMY_AUTH_EMAIL || 'tech4earthh@adapt.demo';
     // Stable demo id so data remains consistent across requests
