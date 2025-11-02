@@ -12,6 +12,12 @@ export async function middleware(req: NextRequest) {
   const isProtected = pathname.startsWith('/home') || pathname.startsWith('/api/credit') || pathname.startsWith('/api/advisor');
   if (!isProtected) return NextResponse.next();
 
+  // Check for dummy session bypass
+  const dummySession = req.cookies.get('sb-dummy-session');
+  if (dummySession) {
+    return NextResponse.next();
+  }
+
   const res = NextResponse.next();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

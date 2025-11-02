@@ -5,6 +5,33 @@ import { createServerClient } from '@supabase/ssr';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    
+    // Handle dummy/bypass login for demo accounts
+    if (body?.user?.email === 'tech4earthh@gmail.com' || body?.user?.id === 'tech4earthh-dummy-id') {
+      const res = new NextResponse(JSON.stringify({ success: true, dummy: true }), { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      // Set a dummy session cookie that the middleware will recognize
+      res.cookies.set('sb-dummy-session', JSON.stringify({
+        user: {
+          id: 'tech4earthh-dummy-id',
+          email: 'tech4earthh@gmail.com',
+          user_metadata: { name: 'Ramesh Kumar' }
+        }
+      }), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: '/',
+      });
+      
+      return res;
+    }
+    
+    // Normal Supabase auth flow
     const access_token = body?.access_token as string | undefined;
     const refresh_token = body?.refresh_token as string | undefined;
     if (!access_token || !refresh_token) {
