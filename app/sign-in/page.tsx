@@ -1,10 +1,10 @@
 "use client";
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSupabaseUser } from '@/lib/useSupabaseUser';
 import Auth from '@/components/Auth';
 
-export default function Page() {
+function SignInContent() {
   const { user } = useSupabaseUser();
   const router = useRouter();
   const params = useSearchParams();
@@ -15,4 +15,12 @@ export default function Page() {
     }
   }, [user, router, params]);
   return <Auth />;
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <SignInContent />
+    </Suspense>
+  );
 }

@@ -26,7 +26,7 @@ export default function CircularQA({ language = 'hi', userId }: CircularQAProps)
   const [isLoading, setIsLoading] = useState(false);
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [showSources, setShowSources] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<unknown>(null);
 
   // Initialize speech recognition
   const startVoiceInput = () => {
@@ -35,8 +35,22 @@ export default function CircularQA({ language = 'hi', userId }: CircularQAProps)
       return;
     }
 
-    const SpeechRecognition = (window as Window & typeof globalThis & { webkitSpeechRecognition: typeof window.SpeechRecognition }).webkitSpeechRecognition || (window as Window).SpeechRecognition;
-    const recognition = new SpeechRecognition();
+    const SpeechRecognitionAPI = (window as unknown as { webkitSpeechRecognition: new () => unknown; SpeechRecognition?: new () => unknown }).webkitSpeechRecognition || 
+      (window as unknown as { SpeechRecognition?: new () => unknown }).SpeechRecognition;
+    
+    if (!SpeechRecognitionAPI) return;
+    
+    const recognition = new SpeechRecognitionAPI() as {
+      lang: string;
+      continuous: boolean;
+      interimResults: boolean;
+      onstart: (() => void) | null;
+      onresult: ((event: { results: { [key: number]: { [key: number]: { transcript: string } } } }) => void) | null;
+      onerror: (() => void) | null;
+      onend: (() => void) | null;
+      start: () => void;
+      stop: () => void;
+    };
 
     const langCodes: Record<Language, string> = {
       hi: 'hi-IN',
@@ -54,7 +68,7 @@ export default function CircularQA({ language = 'hi', userId }: CircularQAProps)
       setIsListening(true);
     };
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: { results: { [key: number]: { [key: number]: { transcript: string } } } }) => {
       const transcript = event.results[0][0].transcript;
       setQuery(transcript);
       setIsListening(false);
@@ -76,7 +90,7 @@ export default function CircularQA({ language = 'hi', userId }: CircularQAProps)
 
   const stopVoiceInput = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      (recognitionRef.current as { stop: () => void }).stop();
       setIsListening(false);
     }
   };

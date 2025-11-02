@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
-export default function AuthPhone(): JSX.Element {
+export default function AuthPhone(): React.JSX.Element {
   const [phone, setPhone] = useState<string>('+91');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');

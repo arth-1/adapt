@@ -6,6 +6,10 @@ export async function POST(request: NextRequest) {
   try {
     const { templateId, userId, language } = await request.json();
 
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Server not ready' }, { status: 500 });
+    }
+
     // Check for existing incomplete session
     const { data: existingSession } = await supabaseAdmin
       .from('form_sessions')
@@ -57,6 +61,10 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const { sessionId, answers, currentIndex, status } = await request.json();
+
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Server not ready' }, { status: 500 });
+    }
 
     const updates: Record<string, string | number | Record<string, unknown>> = {};
     
