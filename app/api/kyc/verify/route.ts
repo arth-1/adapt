@@ -12,6 +12,11 @@ export async function POST(request: NextRequest) {
     const idHash = crypto.createHash('sha256').update(String(idNumber)).digest('hex');
     const idLast4 = String(idNumber).slice(-4);
 
+    
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Server not ready' }, { status: 500 });
+    }
+
     // Check duplicates (free heuristic; no paid KYC API)
     const { data: dup, error: dupErr } = await supabaseAdmin
       .from('kyc_verifications')

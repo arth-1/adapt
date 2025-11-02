@@ -2,6 +2,7 @@ import { QrCode, Phone, X, Scan } from 'lucide-react';
 
 interface SendMoneyOptionsProps {
   onBack: () => void;
+  onStartTransfer?: () => void;
   language: string;
 }
 
@@ -32,7 +33,7 @@ const translations: Record<string, Record<string, string>> = {
   },
 };
 
-export function SendMoneyOptions({ onBack, language }: SendMoneyOptionsProps) {
+export function SendMoneyOptions({ onBack, onStartTransfer, language }: SendMoneyOptionsProps) {
   const t = translations[language] || translations.en;
 
   return (
@@ -54,7 +55,7 @@ export function SendMoneyOptions({ onBack, language }: SendMoneyOptionsProps) {
       {/* Options */}
       <div className="space-y-6">
         {/* QR Code Option */}
-        <button className="w-full bg-white rounded-3xl p-8 flex flex-col items-center gap-4 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
+  <button onClick={onStartTransfer} className="w-full bg-white rounded-3xl p-8 flex flex-col items-center gap-4 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
           <div className="w-24 h-24 bg-linear-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
             <QrCode className="w-12 h-12 text-white" />
           </div>
@@ -69,7 +70,7 @@ export function SendMoneyOptions({ onBack, language }: SendMoneyOptionsProps) {
         </button>
 
         {/* Phone Number Option */}
-        <button className="w-full bg-white rounded-3xl p-8 flex flex-col items-center gap-4 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
+  <button onClick={onStartTransfer} className="w-full bg-white rounded-3xl p-8 flex flex-col items-center gap-4 shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
           <div className="w-24 h-24 bg-linear-to-br from-teal-400 to-cyan-500 rounded-full flex items-center justify-center">
             <Phone className="w-12 h-12 text-white" />
           </div>

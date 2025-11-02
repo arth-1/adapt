@@ -16,6 +16,10 @@ export async function POST(request: NextRequest) {
 
   // Step 1: Generate embedding for the query using Gemini (padded to 1536 dims)
   const queryEmbedding = await generateEmbeddingGemini(query);
+  
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Server not ready' }, { status: 500 });
+    }
 
     // Step 2: Vector similarity search in Supabase
     const { data: relevantCirculars, error: searchError } = await supabaseAdmin

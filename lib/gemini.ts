@@ -52,7 +52,7 @@ export async function generateAnswerGemini(opts: {
   const userPrompt = `Context (authoritative government circulars):\n${context}\n\nQuestion: ${query}\n\nPlease answer in ${language} language. Keep it short, clear, and actionable for rural farmers. Cite specifics from context where appropriate.`;
 
   // Try primary model, then graceful fallbacks if 404/unsupported
-  const tryModels = [GENERATION_MODEL, "gemini-2.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b"]; 
+  const tryModels = [GENERATION_MODEL, "gemini-2.0-flash-exp", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b"]; 
   for (const modelName of tryModels) {
     try {
       const model = genAI.getGenerativeModel({ model: modelName });
@@ -84,23 +84,11 @@ export async function generateAnswerGemini(opts: {
 
 function getSystemPrompt(language: string): string {
   const prompts: Record<string, string> = {
-    hi: [
-      "आप एक वित्तीय सलाहकार AI हैं।",
-      "सिर्फ ऋण/क्रेडिट/सरकारी योजना से संबंधित प्रश्नों का जवाब दें।",
-      "यदि सवाल ऋण/क्रेडिट से बाहर है, तो विनम्रता से बताएँ कि आप केवल ऋण और संबंधित नियमों में मदद करते हैं।",
-      "यदि संदर्भ (Context) में नियम/परिपत्र दिए गए हों, तो केवल उपयोगकर्ता के प्रश्न से संबंधित अंश ही उपयोग करें और अनावश्यक विवरण न दें।",
-      "उत्तर संक्षिप्त, स्पष्ट और कार्रवाई योग्य रखें।",
-    ].join("\n"),
-    en: [
-      "You are a financial advisor AI.",
-      "Only answer questions related to loans/credit/government schemes.",
-      "If the question is outside loans/credit, politely say you can only help with loans and related rules.",
-      "If Context includes regulations/circulars, use only the parts relevant to the user's question and avoid unnecessary detail.",
-      "Keep answers short, clear, and actionable.",
-    ].join("\n"),
-    ta: "நீங்கள் கடன்/கிரெடிட்/அரசுத் திட்டங்கள் சம்பந்தப்பட்ட கேள்விகளுக்கு மட்டும் பதில் சொல்லும் நிதி ஆலோசகர் AI.",
-    te: "మీరు రుణం/క్రెడిట్/సర్కార్ పథకాలకు సంబంధించిన ప్రశ్నలకు మాత్రమే స్పందించే ఆర్థిక సలహాదారు AI.",
-    bn: "আপনি একটি আর্থিক উপদেষ্টা AI এবং কেবল ঋণ/ক্রেডিট/সরকারি স্কিম সম্পর্কিত প্রশ্নের উত্তর দেবেন।",
+    hi: "आप एक सहायक AI हैं जो भारतीय किसानों को सरकारी योजनाओं और वित्तीय सेवाओं के बारे में सरल भाषा में जानकारी देते हैं। जवाब छोटा, स्पष्ट और कार्रवाई योग्य होना चाहिए।",
+    en: "You are a helpful AI that explains government schemes and financial services to Indian farmers in simple language. Answers should be short, clear, and actionable and according to the user needs, you can ask the user regarding the info that you need to tell them updated info on their finances.",
+    ta: "நீங்கள் இந்திய விவசாயிகளுக்கு அரசாங்க திட்டங்கள் மற்றும் நிதி சேவைகளை எளிய மொழியில் விளக்கும் உதவிகரமான AI ஆவீர்கள். பதில்கள் குறுகியதாகவும், தெளிவாகவும், செயல்படக்கூடியதாகவும் இருக்க வேண்டும்.",
+    te: "మీరు భారతీయ రైతులకు ప్రభుత్వ పథకాలు మరియు ఆర్థిక సేవలను సరళమైన భాషలో వివరించే సహాయక AI. సమాధానాలు చిన్నవిగా, స్పష్టంగా మరియు చర్య తీసుకోదగినవిగా ఉండాలి.",
+    bn: "আপনি একজন সহায়ক AI যা ভারতীয় কৃষকদের সরকারি প্রকল্প এবং আর্থিক সেবা সম্পর্কে সহজ ভাষায় ব্যাখ্যা করেন। উত্তরগুলি সংক্ষিপ্ত, স্পষ্ট এবং কার্যকরী হওয়া উচিত।",
   };
   return prompts[language] || prompts["en"];
 }
@@ -114,4 +102,59 @@ export function getFallbackAnswer(language: string): string {
     bn: "এটি সম্পর্কে নির্দিষ্ট তথ্য পাওয়া যায়নি। অনুগ্রহ করে আপনার স্থানীয় ব্যাঙ্ক বা কৃষি অফিসে যোগাযোগ করুন। আপনি আমাদের গ্রাহক সেবা থেকেও সাহায্য নিতে পারেন।",
   };
   return answers[language] || answers["en"];
+}
+
+// Evaluate fraud risk using Gemini based on structured signals.
+export async function evaluateFraudRiskGemini(signals: {
+  amount: number;
+  velocityLastHour: number;
+  averageAmount: number;
+  monthlyIncome: number;
+  newBeneficiaryAgeHours?: number;
+  beneficiaryVerified?: boolean;
+  priorBeneficiaryFlagged?: boolean;
+  description?: string;
+  categoryHint?: string;
+  domainHint?: string;
+  language?: string;
+}): Promise<{ safe: boolean; riskScore: number; flags: string[]; reasons: string[]; model?: string; raw?: string } | null> {
+  if (!genAI) return null;
+
+  const modelNames = [GENERATION_MODEL, "gemini-2.0-flash-exp", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b"];
+  const prompt = `You are a banking fraud detection assistant.
+You will receive structured transaction and user behavior signals. Output a strict JSON object with:
+{"safe": boolean, "riskScore": number (0..1), "flags": string[], "reasons": string[]}
+
+Guidelines:
+- riskScore >= 0.7 means high risk (flag transfer), < 0.7 means allow.
+- Consider capacity (amount vs monthlyIncome), unusual spikes (amount vs averageAmount), velocity, beneficiary freshness, prior flags.
+- If signals indicate agricultural user context, prefer legitimate agricultural expenses; unknown domains or new beneficiaries with large amounts increase risk.
+- Keep reasons short.
+
+Signals:\n${JSON.stringify(signals)}`;
+
+  for (const name of modelNames) {
+    try {
+      const model = genAI.getGenerativeModel({ model: name });
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 300 },
+      });
+      const text = result.response?.text()?.trim();
+      if (!text) continue;
+
+      // Try to extract JSON
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const raw = jsonMatch ? jsonMatch[0] : text;
+      const parsed = JSON.parse(raw);
+      const safe = Boolean(parsed.safe);
+      const riskScore = Math.max(0, Math.min(1, Number(parsed.riskScore)));
+      const flags = Array.isArray(parsed.flags) ? parsed.flags.map(String) : [];
+      const reasons = Array.isArray(parsed.reasons) ? parsed.reasons.map(String) : [];
+      return { safe, riskScore, flags, reasons, model: name, raw };
+    } catch {
+      continue;
+    }
+  }
+  return null;
 }

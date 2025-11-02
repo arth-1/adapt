@@ -5,6 +5,10 @@ interface SmartDashboardProps {
   onVoiceCommand: () => void;
   onInsights: () => void;
   onAdvisor: () => void;
+  onTransactions: () => void;
+  onFinances: () => void;
+  onForms: () => void;
+  onTransfer: () => void;
   onToggleView: () => void;
   onShowHelp: () => void;
   onShowLanguage: () => void;
@@ -90,6 +94,10 @@ export function SmartDashboard({
   onVoiceCommand, 
   onInsights,
   onAdvisor,
+  onTransactions,
+  onFinances,
+  onForms,
+  onTransfer,
   onToggleView, 
   onShowHelp, 
   onShowLanguage,
@@ -233,6 +241,24 @@ export function SmartDashboard({
         </div>
       </div>
 
+      {/* Personal Finances Button */}
+      <button
+        onClick={onFinances}
+        className="w-full bg-white rounded-3xl p-4 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all active:scale-95 mb-3"
+      >
+        <TrendingUp className="w-5 h-5 text-teal-600" />
+        <span className="text-gray-900 text-sm font-medium">Personal Finances</span>
+      </button>
+
+      {/* Forms & Schemes Button */}
+      <button
+        onClick={onForms}
+        className="w-full bg-white rounded-3xl p-4 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all active:scale-95 mb-3"
+      >
+        <Sparkles className="w-5 h-5 text-teal-600" />
+        <span className="text-gray-900 text-sm font-medium">Forms & Schemes</span>
+      </button>
+
       {/* Advisor Button */}
       <button
         onClick={onAdvisor}
@@ -240,6 +266,24 @@ export function SmartDashboard({
       >
         <HandCoins className="w-5 h-5 text-teal-600" />
         <span className="text-gray-900 text-sm font-medium">{t.advisor}</span>
+      </button>
+
+      {/* Bank Transfer Button */}
+      <button
+        onClick={onTransfer}
+        className="w-full bg-white rounded-3xl p-4 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all active:scale-95 mb-3"
+      >
+        <Send className="w-5 h-5 text-teal-600" />
+        <span className="text-gray-900 text-sm font-medium">{t.bankTransfer}</span>
+      </button>
+
+      {/* Transactions History Button */}
+      <button
+        onClick={onTransactions}
+        className="w-full bg-white rounded-3xl p-4 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all active:scale-95 mb-3"
+      >
+        <Download className="w-5 h-5 text-teal-600" />
+        <span className="text-gray-900 text-sm font-medium">{t.transactionHistory}</span>
       </button>
 
       {/* Voice Command Button */}

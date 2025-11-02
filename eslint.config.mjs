@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Ignore experimental duplicate UI folder to reduce noise
+    "updated_ui/**",
   ]),
 ]);
 

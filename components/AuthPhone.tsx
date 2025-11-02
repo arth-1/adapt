@@ -54,8 +54,9 @@ export default function AuthPhone(): JSX.Element {
         // Clean URL and redirect
         window.history.replaceState({}, document.title, '/home');
         window.location.href = '/home';
-      } catch (e: any) {
-        setMessage(`OAuth error: ${e?.message || 'Unknown error'}`);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Unknown error';
+        setMessage(`OAuth error: ${msg}`);
       } finally {
         setLoading(false);
       }
@@ -93,8 +94,9 @@ export default function AuthPhone(): JSX.Element {
         setMessage('Signed in! Redirecting...');
         setTimeout(() => (window.location.href = '/home'), 300);
       }
-    } catch (e: any) {
-      setMessage(e?.message || 'Failed to sign in');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to sign in';
+      setMessage(msg);
     } finally {
       setLoading(false);
     }
@@ -112,8 +114,8 @@ export default function AuthPhone(): JSX.Element {
 
       setPhase('verify');
       setMessage('OTP sent. Please check your SMS.');
-    } catch (e: any) {
-      const msg = e?.message || 'Failed to request OTP';
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to request OTP';
       if (/unsupported phone provider/i.test(msg)) {
         setMessage(
           'Phone OTP is not enabled for this project. Configure an SMS provider in Supabase Auth → Phone.'
@@ -147,8 +149,9 @@ export default function AuthPhone(): JSX.Element {
 
       setMessage('Signed in! Redirecting...');
       setTimeout(() => (window.location.href = '/home'), 300);
-    } catch (e: any) {
-      setMessage(e?.message || 'Failed to verify OTP');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to verify OTP';
+      setMessage(msg);
     } finally {
       setLoading(false);
     }
@@ -164,8 +167,9 @@ export default function AuthPhone(): JSX.Element {
       });
       if (error) throw error;
       // Browser will redirect to Google
-    } catch (e: any) {
-      setMessage(e?.message || 'Failed to start Google sign-in');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to start Google sign-in';
+      setMessage(msg);
       setLoading(false);
     }
   }

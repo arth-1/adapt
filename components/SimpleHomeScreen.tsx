@@ -5,6 +5,10 @@ interface SimpleHomeScreenProps {
   onVoiceCommand: () => void;
   onInsights: () => void;
   onAdvisor: () => void;
+  onFinances: () => void;
+  onForms: () => void;
+  onTransactions: () => void;
+  onTransfer: () => void;
   onToggleView: () => void;
   onShowHelp: () => void;
   onShowLanguage: () => void;
@@ -99,6 +103,10 @@ export function SimpleHomeScreen({
   onVoiceCommand, 
   onInsights,
   onAdvisor,
+  onFinances,
+  onForms,
+  onTransactions,
+  onTransfer,
   onToggleView, 
   onShowHelp, 
   onShowLanguage,
@@ -192,18 +200,25 @@ export function SimpleHomeScreen({
       <div className="bg-white rounded-3xl p-6 mb-6 shadow-lg">
         <p className="text-gray-900 font-semibold mb-4">{t.quickActions}</p>
         <div className="grid grid-cols-2 gap-4">
-          <button className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition-all">
+          <button onClick={onTransactions} className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition-all">
             <div className="w-12 h-12 bg-linear-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center shrink-0">
               <Receipt className="w-6 h-6 text-white" />
             </div>
             <span className="text-gray-900 text-left text-sm font-medium">{t.transactionHistory}</span>
           </button>
 
-          <button className="bg-linear-to-br from-purple-50 to-pink-50 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition-all">
+          <button onClick={onTransfer} className="bg-linear-to-br from-purple-50 to-pink-50 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition-all">
             <div className="w-12 h-12 bg-linear-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center shrink-0">
               <Building2 className="w-6 h-6 text-white" />
             </div>
             <span className="text-gray-900 text-left text-sm font-medium">{t.bankTransfer}</span>
+          </button>
+
+          <button onClick={onFinances} className="bg-linear-to-br from-teal-50 to-cyan-50 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition-all">
+            <div className="w-12 h-12 bg-linear-to-br from-teal-400 to-cyan-500 rounded-full flex items-center justify-center shrink-0">
+              <Wallet className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-gray-900 text-left text-sm font-medium">Personal Finances</span>
           </button>
 
           <button onClick={onAdvisor} className="bg-linear-to-br from-amber-50 to-orange-50 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition-all">
@@ -218,6 +233,13 @@ export function SimpleHomeScreen({
               <Download className="w-6 h-6 text-white" />
             </div>
             <span className="text-gray-900 text-left text-sm font-medium">{t.receive}</span>
+          </button>
+
+          <button onClick={onForms} className="bg-linear-to-br from-purple-50 to-pink-50 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md transition-all">
+            <div className="w-12 h-12 bg-linear-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center shrink-0">
+              <Receipt className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-gray-900 text-left text-sm font-medium">Forms & Schemes</span>
           </button>
         </div>
       </div>

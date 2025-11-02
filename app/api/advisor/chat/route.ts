@@ -13,15 +13,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'message is required' }, { status: 400 });
     }
 
+    const admin = supabaseAdmin;
+    if (!admin) {
+      return NextResponse.json({ error: 'Server not ready' }, { status: 500 });
+    }
+
     // Load soft credit score if available
-    const { data: profile } = await supabaseAdmin
+    const { data: profile } = await admin
       .from('credit_profiles')
       .select('soft_score, confidence_level, factors')
       .eq('user_id', authUser.id)
       .maybeSingle();
 
     // Attempt to load last few transactions for context (optional)
-    const { data: tx } = await supabaseAdmin
+    const { data: tx } = await admin
       .from('transactions')
       .select('amount, transaction_type, description, created_at')
       .eq('user_id', authUser.id)

@@ -8,6 +8,11 @@ export async function POST(request: NextRequest) {
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const userId = authUser.id;
 
+    
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Server not ready' }, { status: 500 });
+    }
+
     // Gather signals
     const [{ data: user }, { data: tx }, { data: nfe }, { data: kyc }] = await Promise.all([
       supabaseAdmin.from('users').select('created_at, kyc_status').eq('id', userId).maybeSingle(),

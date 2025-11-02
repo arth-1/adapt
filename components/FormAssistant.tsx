@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { t, type Language } from '@/lib/languages';
 
 interface Field {
@@ -39,12 +39,7 @@ export default function FormAssistant({
   const [isLoading, setIsLoading] = useState(true);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
-  // Load form template
-  useEffect(() => {
-    loadTemplate();
-  }, [templateId]);
-
-  const loadTemplate = async () => {
+  const loadTemplate = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/forms/${templateId}`);
@@ -70,10 +65,34 @@ export default function FormAssistant({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [templateId, userId, language]);
 
-  const currentField = template?.fields[currentIndex];
-  const progress = template ? ((currentIndex / template.fields.length) * 100) : 0;
+  // Load form template
+  useEffect(() => {
+    loadTemplate();
+  }, [loadTemplate]);
+
+  const fields = template?.fields ?? [];
+  const safeIndex = fields.length > 0 ? Math.min(Math.max(0, currentIndex), fields.length - 1) : 0;
+  const currentField = fields.length > 0 ? fields[safeIndex] : undefined;
+  const progress = fields.length > 0 ? ((safeIndex / fields.length) * 100) : 0;
+
+  const progressWidthClass = (() => {
+    const p = Math.round(progress);
+    if (p <= 0) return 'w-0';
+    if (p <= 8) return 'w-1/12';
+    if (p <= 17) return 'w-1/6';
+    if (p <= 25) return 'w-1/4';
+    if (p <= 33) return 'w-1/3';
+    if (p <= 42) return 'w-5/12';
+    if (p <= 50) return 'w-1/2';
+    if (p <= 58) return 'w-7/12';
+    if (p <= 66) return 'w-2/3';
+    if (p <= 75) return 'w-3/4';
+    if (p <= 83) return 'w-5/6';
+    if (p <= 92) return 'w-11/12';
+    return 'w-full';
+  })();
 
   // Speak question
   const speakQuestion = (field: Field) => {
@@ -104,8 +123,18 @@ export default function FormAssistant({
       return;
     }
 
-    const SpeechRecognition = (window as typeof window & { webkitSpeechRecognition: new () => SpeechRecognition }).webkitSpeechRecognition || window.SpeechRecognition;
-    const recognition = new SpeechRecognition();
+    type GenericRecognition = {
+      lang: string;
+      continuous: boolean;
+      onstart: () => void;
+      onresult: (event: { results: ArrayLike<{ 0: { transcript: string } }> }) => void;
+      onerror: () => void;
+      onend: () => void;
+      start: () => void;
+    };
+    const SpeechRecognitionCtor: new () => GenericRecognition = ((window as unknown as { webkitSpeechRecognition?: new () => GenericRecognition; SpeechRecognition?: new () => GenericRecognition; }).webkitSpeechRecognition
+      || (window as unknown as { webkitSpeechRecognition?: new () => GenericRecognition; SpeechRecognition?: new () => GenericRecognition; }).SpeechRecognition) as new () => GenericRecognition;
+    const recognition: GenericRecognition = new SpeechRecognitionCtor();
 
     const langCodes: Record<Language, string> = {
       hi: 'hi-IN',
@@ -120,7 +149,7 @@ export default function FormAssistant({
 
     recognition.onstart = () => setIsListening(true);
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       setCurrentAnswer(transcript);
       setIsListening(false);
@@ -197,6 +226,25 @@ export default function FormAssistant({
     if (onComplete) {
       onComplete(answers);
     }
+  };
+
+  const handleDownload = () => {
+    if (!template) return;
+    const lines = template.fields.map((f) => {
+      const q = f.label[language] || f.label['en'];
+      const a = answers[f.name] ?? '';
+      return `${q}: ${a}`;
+    });
+    const content = `Form: ${template.name}\n\n` + lines.join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${template.id}-filled.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   // Read back all answers
@@ -281,15 +329,12 @@ export default function FormAssistant({
           </span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
-          <div
-            className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
+          <div className={`bg-linear-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-300 ${progressWidthClass}`} />
         </div>
       </div>
 
       {/* Current Question */}
-      <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 mb-6 border-2 border-blue-200">
+  <div className="bg-linear-to-br from-blue-50 to-purple-50 rounded-2xl p-8 mb-6 border-2 border-blue-200">
         <div className="flex items-start justify-between mb-6">
           <h3 className="text-2xl md:text-3xl font-bold text-gray-800 flex-1">
             {currentField.label[language] || currentField.label['en']}
@@ -312,7 +357,7 @@ export default function FormAssistant({
             className={`w-32 h-32 rounded-full font-bold text-xl transition-all transform hover:scale-105 active:scale-95 shadow-2xl ${
               isListening
                 ? 'bg-red-500 text-white animate-pulse'
-                : 'bg-gradient-to-br from-blue-500 to-purple-600 text-white'
+                : 'bg-linear-to-br from-blue-500 to-purple-600 text-white'
             }`}
           >
             {isListening ? '🎤' : '🎙️'}
@@ -400,6 +445,13 @@ export default function FormAssistant({
             >
               <span>🔊</span>
               <span>{t('readBack', language)}</span>
+            </button>
+            
+            <button
+              onClick={handleDownload}
+              className="flex-1 bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold py-4 px-6 rounded-xl transition-all"
+            >
+              {language === 'hi' ? 'डाउनलोड' : 'Download'}
             </button>
             
             <button

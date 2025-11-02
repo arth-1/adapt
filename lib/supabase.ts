@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -6,7 +6,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Server-side client with service role (only works server-side)
-export const supabaseAdmin = typeof window === 'undefined'
+export const supabaseAdmin: SupabaseClient | null = typeof window === 'undefined'
   ? createClient(
       supabaseUrl,
       process.env.SUPABASE_SERVICE_ROLE_KEY || '',
@@ -17,7 +17,7 @@ export const supabaseAdmin = typeof window === 'undefined'
         }
       }
     )
-  : null as any; // Client-side fallback - don't use supabaseAdmin in client components!
+  : null; // Client-side fallback - don't use supabaseAdmin in client components!
 
 // Database types
 export type User = {
@@ -46,7 +46,7 @@ export type Transaction = {
   status: 'pending' | 'completed' | 'failed' | 'flagged';
   payment_method: string;
   description?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   risk_score?: number;
   fraud_check_passed: boolean;
   completed_at?: string;
@@ -80,7 +80,7 @@ export type Circular = {
   published_date?: string;
   fetched_at: string;
   embedding?: number[];
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   created_at: string;
 };
 
@@ -89,9 +89,9 @@ export type FormTemplate = {
   name: string;
   category?: string;
   description?: string;
-  fields: any[];
+  fields: Array<Record<string, unknown>>;
   language_support: string[];
-  validation_rules?: any;
+  validation_rules?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 };
@@ -101,7 +101,7 @@ export type FormSession = {
   user_id: string;
   template_id: string;
   current_field_index: number;
-  answers: any;
+  answers: Record<string, unknown>;
   language: string;
   status: 'in_progress' | 'completed' | 'abandoned';
   completed_at?: string;
